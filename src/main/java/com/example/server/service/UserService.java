@@ -15,10 +15,6 @@ public class UserService {
     @Autowired
     private UserRepository userRepository;
 
-//    public User getByEmail(String email) {
-//        return userRepository.findById(email);
-//    }
-
     public User addUser(UserParam param) {
         User user = new User();
         user.setEmail(param.getEmail());
@@ -27,5 +23,23 @@ public class UserService {
         user.setLastName(param.getLastName());
 
         return userRepository.save(user);
+    }
+
+    public User getUser(String email) {
+        return userRepository.findById(email).orElse(null);
+    }
+
+    public User updateUser(String email, UserParam param) {
+        User userFromDb = userRepository.findById(email).orElse(null);
+        userFromDb.setEmail(param.getEmail());
+        userFromDb.setPassword(param.getPassword());
+        userFromDb.setFirstName(param.getFirstName());
+        userFromDb.setLastName(param.getLastName());
+
+        return userRepository.save(userFromDb);
+    }
+
+    public void deleteUser(String email) {
+        userRepository.deleteById(email);
     }
 }
