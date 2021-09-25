@@ -6,6 +6,8 @@ import com.example.server.repository.UserRepository;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
+import java.util.Optional;
+
 /**
  * @author Jingze Zheng
  */
@@ -29,14 +31,19 @@ public class UserService {
         return userRepository.findById(email).orElse(null);
     }
 
-    public User updateUser(String email, UserParam param) {
-        User userFromDb = userRepository.findById(email).orElse(null);
-        userFromDb.setEmail(param.getEmail());
-        userFromDb.setPassword(param.getPassword());
-        userFromDb.setFirstName(param.getFirstName());
-        userFromDb.setLastName(param.getLastName());
+    public User updateUser(UserParam param) {
+        Optional<User> userFromBd = userRepository.findById(param.getEmail());
 
-        return userRepository.save(userFromDb);
+        if (userFromBd.isPresent()) {
+            User userUpdate = userFromBd.get();
+            userUpdate.setPassword(param.getPassword());
+            userUpdate.setFirstName(param.getFirstName());
+            userUpdate.setLastName(param.getLastName());
+
+            return userRepository.save(userUpdate);
+        } else {
+            return null;
+        }
     }
 
     public void deleteUser(String email) {
