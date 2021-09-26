@@ -1,12 +1,12 @@
 package com.example.server.service;
 
-import com.example.server.entity.dao.User;
-import com.example.server.entity.pojo.UserParam;
+import com.example.server.common.InternalException;
+import com.example.server.entity.User;
 import com.example.server.repository.UserRepository;
-import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
 
-import java.util.Optional;
+import java.util.Objects;
 
 /**
  * @author Jingze Zheng
@@ -14,16 +14,14 @@ import java.util.Optional;
 @Service
 public class UserService {
 
-    @Autowired
-    private UserRepository userRepository;
 
-    public User addUser(UserParam param) {
-        User user = new User();
-        user.setEmail(param.getEmail());
-        user.setPassword(param.getPassword());
-        user.setFirstName(param.getFirstName());
-        user.setLastName(param.getLastName());
+    private final UserRepository userRepository;
 
+    public UserService(UserRepository userRepository) {
+        this.userRepository = userRepository;
+    }
+
+    public User addUser(User user) {
         return userRepository.save(user);
     }
 
@@ -31,22 +29,28 @@ public class UserService {
         return userRepository.findById(email).orElse(null);
     }
 
-    public User updateUser(UserParam param) {
-        Optional<User> userFromBd = userRepository.findById(param.getEmail());
+    public User updateUser(String email ,User user) throws InternalException {
+        User existingUser = this.getUser(email);
 
-        if (userFromBd.isPresent()) {
-            User userUpdate = userFromBd.get();
-            userUpdate.setPassword(param.getPassword());
-            userUpdate.setFirstName(param.getFirstName());
-            userUpdate.setLastName(param.getLastName());
-
-            return userRepository.save(userUpdate);
-        } else {
-            return null;
+        if (existingUser == null) {
+            throw new InternalException("User not found", HttpStatus.NOT_FOUND);
         }
+
+        if (!Objects.equals(email, user.getEmail())) {
+            throw new InternalException("Cannot update user email since email is unique ID", HttpStatus.BAD_REQUEST);
+        }
+
+        existingUser.setFirstName(user.getFirstName());
+        existingUser.setLastName(user.getLastName());
+        existingUser.setPassword(user.getPassword());
+        return userRepository.save(user);
     }
 
-    public void deleteUser(String email) {
-        userRepository.deleteById(email);
+    public void deleteUser(String email) throws InternalException {
+        try {
+            userRepository.deleteById(email);
+        }catch(Exception ex) {
+            throw new InternalException("Can not delete this user.", HttpStatus.BAD_REQUEST);
+        }
     }
 }

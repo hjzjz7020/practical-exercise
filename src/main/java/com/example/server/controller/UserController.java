@@ -1,40 +1,54 @@
 package com.example.server.controller;
 
-import com.example.server.entity.dao.User;
-import com.example.server.entity.pojo.Error;
-import com.example.server.entity.pojo.UserParam;
+import com.example.server.common.InternalException;
+import com.example.server.entity.User;
 import com.example.server.service.UserService;
-import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.*;
+
+import javax.validation.Valid;
+import javax.validation.constraints.Email;
 
 /**
  * @author Jingze Zheng
  */
+@Validated
 @RestController
 @RequestMapping("/users")
 public class UserController {
 
-    @Autowired
-    private UserService userService;
+    private final UserService userService;
+
+    public UserController(UserService userService) {
+        this.userService = userService;
+    }
 
     @PostMapping("")
-    public ResponseEntity<Object> addUser(@RequestBody UserParam user) {
-        return ResponseEntity.created().body(userService.addUser(user));
+    public ResponseEntity<Object> addUser(@Valid @RequestBody User user) {
+        userService.addUser(user);
+        return new ResponseEntity<>(HttpStatus.CREATED);
     }
 
     @GetMapping("/{email}")
-    public ResponseEntity<Object> getUser(@PathVariable String email) {
-        return ResponseEntity.ok().body(userService.getUser(email));
+    public ResponseEntity<Object> getUser(@Valid @PathVariable("email") @Email String email) throws InternalException {
+        User user = userService.getUser(email);
+        if (user == null) {
+            throw new InternalException("User not found", HttpStatus.NOT_FOUND);
+        }
+        return ResponseEntity.ok().body(user);
     }
 
     @PutMapping("/{email}")
-    public ResponseEntity<Object> updateUser(@RequestBody UserParam user) {
-        return ResponseEntity.ok().body(userService.updateUser(user));
+    public ResponseEntity<Object> updateUser(@PathVariable("email") @Email String email, @Valid @RequestBody User user) throws InternalException {
+        userService.updateUser(email, user);
+        return ResponseEntity.noContent().build();
     }
 
     @DeleteMapping("/{email}")
-    public ResponseEntity<Error> deleteUser(@PathVariable String email) {
+    public ResponseEntity<Object> deleteUser(@PathVariable @Email String email) throws InternalException {
         userService.deleteUser(email);
+        return ResponseEntity.noContent().build();
     }
 }

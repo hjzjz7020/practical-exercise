@@ -1,14 +1,38 @@
-package com.example.server.entity.pojo;
+package com.example.server.entity;
+
+import javax.persistence.Entity;
+import javax.persistence.Id;
+import javax.validation.constraints.Email;
+import javax.validation.constraints.NotEmpty;
+import javax.validation.constraints.NotNull;
 
 /**
  * @author Jingze Zheng
  */
-public class UserParam {
+@Entity
+public class User {
 
+    @Id
+    @Email
+    @NotEmpty
+    @NotNull
     private String email;
+    @NotEmpty
+    @NotNull
     private String password;
     private String firstName;
     private String lastName;
+
+    public User(String email, String password, String firstName, String lastName) {
+        this.email = email;
+        this.password = password;
+        this.firstName = firstName;
+        this.lastName = lastName;
+    }
+
+    public User() {
+
+    }
 
     public String getEmail() {
         return email;
