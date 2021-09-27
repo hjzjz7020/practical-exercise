@@ -1,8 +1,10 @@
 package com.example.server.controller;
 
-import com.example.server.common.InternalException;
-import com.example.server.entity.User;
+import com.example.server.entity.dao.User;
+import com.example.server.entity.pojo.UserDto;
+import com.example.server.exception.InternalException;
 import com.example.server.service.UserService;
+import org.modelmapper.ModelMapper;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.validation.annotation.Validated;
@@ -11,44 +13,46 @@ import org.springframework.web.bind.annotation.*;
 import javax.validation.Valid;
 import javax.validation.constraints.Email;
 
-/**
- * @author Jingze Zheng
- */
+/** @author Jingze Zheng */
 @Validated
 @RestController
 @RequestMapping("/users")
 public class UserController {
 
-    private final UserService userService;
+  private final UserService userService;
 
-    public UserController(UserService userService) {
-        this.userService = userService;
-    }
+  public UserController(UserService userService) {
+    this.userService = userService;
+  }
 
-    @PostMapping("")
-    public ResponseEntity<Object> addUser(@Valid @RequestBody User user) {
-        userService.addUser(user);
-        return new ResponseEntity<>(HttpStatus.CREATED);
-    }
+  ModelMapper modelMapper = new ModelMapper();
 
-    @GetMapping("/{email}")
-    public ResponseEntity<Object> getUser(@Valid @PathVariable("email") @Email String email) throws InternalException {
-        User user = userService.getUser(email);
-        if (user == null) {
-            throw new InternalException("User not found", HttpStatus.NOT_FOUND);
-        }
-        return ResponseEntity.ok().body(user);
-    }
+  @PostMapping()
+  public ResponseEntity<Void> addUser(@Valid @RequestBody UserDto userDto)
+      throws InternalException {
+    userService.addUser(modelMapper.map(userDto, User.class));
+    return new ResponseEntity<>(HttpStatus.CREATED);
+  }
 
-    @PutMapping("/{email}")
-    public ResponseEntity<Object> updateUser(@PathVariable("email") @Email String email, @Valid @RequestBody User user) throws InternalException {
-        userService.updateUser(email, user);
-        return ResponseEntity.noContent().build();
-    }
+  @GetMapping("/{email}")
+  public ResponseEntity<User> getUserByEmail(@Valid @PathVariable("email") @Email String email)
+      throws InternalException {
+    User user = userService.getUserByEmail(email);
+    return ResponseEntity.ok().body(user);
+  }
 
-    @DeleteMapping("/{email}")
-    public ResponseEntity<Object> deleteUser(@PathVariable @Email String email) throws InternalException {
-        userService.deleteUser(email);
-        return ResponseEntity.noContent().build();
-    }
+  @PutMapping("/{email}")
+  public ResponseEntity<Void> updateUserByEmail(
+      @PathVariable("email") @Email String email, @Valid @RequestBody UserDto userDto)
+      throws InternalException {
+    userService.updateUserByEmail(email, modelMapper.map(userDto, User.class));
+    return new ResponseEntity<>(HttpStatus.NO_CONTENT);
+  }
+
+  @DeleteMapping("/{email}")
+  public ResponseEntity<Void> deleteUserByEmail(@PathVariable @Email String email)
+      throws InternalException {
+    userService.deleteUserByEmail(email);
+    return new ResponseEntity<>(HttpStatus.NO_CONTENT);
+  }
 }
