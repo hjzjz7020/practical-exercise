@@ -30,7 +30,7 @@ public class SwaggerConfig {
     Contact contact = new Contact("Jingze Zheng", "", "zhengjingze94@gmail.com");
     return new ApiInfo(
         "API server",
-        "API server for Vector technical assessment.",
+        "A Spring boot RESTful API practical exercise.",
         "1.0",
         "",
         contact,
